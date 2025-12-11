@@ -10,34 +10,62 @@ import os
 import sys
 import time
 
+import requests
 from dotenv import load_dotenv
-from google import genai
 
 # Load environment variables
 load_dotenv()
 
 # Constants
+API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 AGENT_MODEL = "deep-research-pro-preview-12-2025"
 POLL_INTERVAL = 10  # seconds
 
 
-def create_client():
-    """Create and return a Gemini API client."""
+def get_api_key():
+    """Get API key from environment."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("Error: GEMINI_API_KEY not found in environment variables.")
         print("Please set it in your .env file.")
         sys.exit(1)
+    return api_key
 
-    return genai.Client(api_key=api_key)
+
+def create_interaction(api_key: str, query: str) -> dict:
+    """Create a new deep research interaction."""
+    url = f"{API_BASE}/interactions"
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": api_key
+    }
+    payload = {
+        "input": query,
+        "agent": AGENT_MODEL,
+        "background": True
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+    return response.json()
 
 
-def run_research(client, query: str):
+def get_interaction(api_key: str, interaction_id: str) -> dict:
+    """Get the status of an interaction."""
+    url = f"{API_BASE}/interactions/{interaction_id}"
+    headers = {"x-goog-api-key": api_key}
+
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+
+def run_research(api_key: str, query: str):
     """
     Start a deep research task and poll until completion.
 
     Args:
-        client: The Gemini API client
+        api_key: The Gemini API key
         query: The research query/topic
 
     Returns:
@@ -46,34 +74,45 @@ def run_research(client, query: str):
     print(f"\nStarting deep research on: {query}")
     print("-" * 50)
 
-    # Start the research task (runs in background)
-    interaction = client.interactions.create(
-        input=query,
-        agent=AGENT_MODEL,
-        background=True
-    )
+    # Start the research task
+    try:
+        interaction = create_interaction(api_key, query)
+    except requests.exceptions.HTTPError as e:
+        print(f"Error creating interaction: {e}")
+        print(f"Response: {e.response.text}")
+        return None
 
-    print(f"Research task started. ID: {interaction.id}")
+    interaction_id = interaction.get("name", "").split("/")[-1] or interaction.get("id")
+    print(f"Research task started. ID: {interaction_id}")
     print("Polling for results (this may take several minutes)...\n")
 
     # Poll for completion
     start_time = time.time()
     while True:
-        interaction = client.interactions.get(interaction.id)
+        try:
+            interaction = get_interaction(api_key, interaction_id)
+        except requests.exceptions.HTTPError as e:
+            print(f"Error polling: {e}")
+            return None
+
         elapsed = int(time.time() - start_time)
+        status = interaction.get("status", "unknown")
 
-        if interaction.status == "completed":
+        if status == "COMPLETED" or status == "completed":
             print(f"\nResearch completed in {elapsed} seconds!")
-            return interaction.outputs[-1].text
+            # Extract output text
+            outputs = interaction.get("outputs", [])
+            if outputs:
+                return outputs[-1].get("text", str(outputs[-1]))
+            return str(interaction)
 
-        elif interaction.status == "failed":
-            error_msg = getattr(interaction, 'error', 'Unknown error')
-            print(f"\nResearch failed after {elapsed} seconds: {error_msg}")
+        elif status == "FAILED" or status == "failed":
+            error = interaction.get("error", "Unknown error")
+            print(f"\nResearch failed after {elapsed} seconds: {error}")
             return None
 
         else:
-            # Still in progress
-            print(f"  Status: {interaction.status} ({elapsed}s elapsed)")
+            print(f"  Status: {status} ({elapsed}s elapsed)")
             time.sleep(POLL_INTERVAL)
 
 
@@ -90,11 +129,11 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize client
-    client = create_client()
+    # Get API key
+    api_key = get_api_key()
 
     # Run research
-    result = run_research(client, args.query)
+    result = run_research(api_key, args.query)
 
     if result:
         print("\n" + "=" * 50)

@@ -2,6 +2,14 @@
 
 Test script for Google's Gemini Deep Research API (Interactions API).
 
+## About
+
+The Deep Research API is an autonomous research agent powered by Gemini 3 Pro. It:
+- Plans and executes multi-step research tasks
+- Iteratively searches the web via Google Search
+- Synthesizes findings into comprehensive reports with citations
+- Typically takes 5-15 minutes per research task
+
 ## Setup
 
 1. Install dependencies:
@@ -14,6 +22,8 @@ Test script for Google's Gemini Deep Research API (Interactions API).
    GEMINI_API_KEY=your_api_key_here
    ```
 
+   Get your API key from [Google AI Studio](https://aistudio.google.com/apikey).
+
 ## Usage
 
 ```bash
@@ -24,4 +34,10 @@ python deep_research.py
 python deep_research.py "What is quantum computing?"
 ```
 
-The script will start a research task and poll until completion (may take several minutes).
+The script polls the Interactions API endpoint until research completes.
+
+## API Details
+
+- **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/interactions`
+- **Agent**: `deep-research-pro-preview-12-2025`
+- **Execution**: Asynchronous (requires polling)
