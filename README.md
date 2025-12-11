@@ -41,3 +41,22 @@ The script polls the Interactions API endpoint until research completes.
 - **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/interactions`
 - **Agent**: `deep-research-pro-preview-12-2025`
 - **Execution**: Asynchronous (requires polling)
+
+## MCP Server
+
+This repo also includes a remote MCP server for use with Claude Desktop or Claude Code.
+
+### Quick Start
+
+1. Deploy the MCP server:
+   ```bash
+   cd mcp-server
+   npm install
+   npx wrangler login
+   npm run deploy
+   ```
+
+2. Add to Claude as a custom connector:
+   - **URL**: `https://deep-research-mcp.{YOUR_ACCOUNT}.workers.dev/sse/{YOUR_GEMINI_API_KEY}`
+
+See [mcp-server/README.md](mcp-server/README.md) for details.
