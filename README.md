@@ -44,7 +44,7 @@ The script polls the Interactions API endpoint until research completes.
 
 ## MCP Server
 
-This repo also includes a remote MCP server for use with Claude Desktop or Claude Code.
+This repo also includes a remote MCP server for use with Claude Desktop.
 
 ### Quick Start
 
@@ -56,7 +56,8 @@ This repo also includes a remote MCP server for use with Claude Desktop or Claud
    npm run deploy
    ```
 
-2. Add to Claude as a custom connector:
-   - **URL**: `https://deep-research-mcp.{YOUR_ACCOUNT}.workers.dev/sse/{YOUR_GEMINI_API_KEY}`
+2. Add to Claude Desktop as a custom connector:
+   - **URL**: `https://deep-research-mcp.foray-consulting.workers.dev/sse`
+   - Click **Connect** → Enter your Gemini API key in the form → Done!
 
 See [mcp-server/README.md](mcp-server/README.md) for details.

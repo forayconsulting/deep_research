@@ -21,10 +21,16 @@ Remote MCP server for Gemini Deep Research, deployed on Cloudflare Workers.
 
 ## Connect to Claude
 
-Add as a custom connector in Claude Desktop or Claude Code:
+Add as a custom connector in Claude Desktop:
 
-- **Name**: Deep Research
-- **URL**: `https://deep-research-mcp.{YOUR_ACCOUNT}.workers.dev/sse/{YOUR_GEMINI_API_KEY}`
+1. Go to **Settings → Connectors → Add custom connector**
+2. Enter:
+   - **Name**: Deep Research
+   - **URL**: `https://deep-research-mcp.foray-consulting.workers.dev/sse`
+3. Click **Add**, then **Connect**
+4. A browser window opens - enter your Gemini API key
+5. Click **Connect** in the form
+6. Done! The connector shows "Connected"
 
 Get your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -56,10 +62,19 @@ List all your research tasks (recent first).
 3. Claude polls with `check_deep_research` until complete
 4. Results include a comprehensive report with citations
 
+## Authentication
+
+The server uses OAuth to securely collect and store your Gemini API key:
+
+- Your API key is entered once during the OAuth flow
+- It's encrypted and stored server-side
+- Never exposed to the MCP client
+- Each API key gets isolated storage (separate research history)
+
 ## Local Development
 
 ```bash
 npm run dev
 ```
 
-Then connect to `http://localhost:8787/sse/{YOUR_API_KEY}`
+Then add `http://localhost:8787/sse` as a custom connector.
