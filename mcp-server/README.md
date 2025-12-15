@@ -49,18 +49,29 @@ Check status and get results for a research task.
 
 ```
 interaction_id: "abc123"
-→ { status: "completed", result: "..." } or { status: "in_progress", elapsed_seconds: 120 }
+→ { status: "completed", result: "...", elapsed_time: "11 min 24 sec" }
+  or { status: "in_progress", elapsed_seconds: 120, next_check_seconds: 60 }
+  or { status: "rate_limited", wait_seconds: 45 }  // if checked too soon
 ```
 
+**Rate Limiting**: The server enforces polling intervals - 90 seconds before the first check, 60 seconds between subsequent checks. Requests that arrive too early are rejected with the time remaining.
+
 ### `list_research_tasks`
-List all your research tasks (recent first).
+List all your research tasks (recent first). Tasks persist for 7 days.
 
 ## How It Works
 
 1. Claude calls `start_deep_research` with your query
 2. The server starts a Gemini Deep Research task (runs 5-15 minutes)
-3. Claude polls with `check_deep_research` until complete
+3. Claude polls with `check_deep_research` until complete (rate-limited to prevent excessive polling)
 4. Results include a comprehensive report with citations
+
+## Task Persistence
+
+Tasks are stored in Cloudflare KV with a 7-day TTL:
+- Tasks persist across Claude Desktop reconnections
+- Each user (API key) has isolated task storage
+- Elapsed time is accurately tracked from task creation
 
 ## Authentication
 
